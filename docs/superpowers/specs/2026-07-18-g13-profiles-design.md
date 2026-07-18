@@ -74,7 +74,7 @@ keycodes into mouse events — extra always-running service, laggier; and
 
   | Row | Keys | Commands |
   |-----|------|----------|
-  | 1 (G1–G3, G5–G7) | Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, [G4=pan↑], Measure (I), Look At (viewcube), Home view | top-row utility |
+  | 1 (G1–G3, G5–G7) | Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, [G4=pan↑], Measure (I), Offset (O), Joint (J) | top-row utility |
   | 2 (G8, G9, G13, G14) | S (shortcut toolbox), E (extrude), Q (press/pull), F (fillet) | modeling |
   | 3 (G15–G19) | L (line), R (rectangle), C (circle), D (dimension), X (construction) | sketching |
   | 4 (G20–G22) | T (trim), P (project), M (move/copy) | misc |
