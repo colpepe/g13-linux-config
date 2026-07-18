@@ -141,5 +141,6 @@ regenerated when bindings change.
 ## Out of scope
 
 - Java config GUI changes (configs are hand-maintained text files).
-- Profiles 3/4 (L3/L4 softkeys) — left at driver defaults for now.
+- Profiles at L3/L4 softkeys: installed as verbatim clones of the gaming
+  profile (placeholders, blue backlight) — no further consideration for now.
 - Upstreaming the patch (possible later; keep commits clean in case).
