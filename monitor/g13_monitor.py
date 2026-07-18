@@ -98,37 +98,66 @@ def get_gpu_temp():
     return round(temps['amdgpu'][0].current)
 
 
-def get_gpu_line():
-    """Builds the GPU line: VRAM usage + temp. Degrades gracefully."""
-    parts = []
+def get_ram_temp():
+    """Returns a memory/mainboard temp in whole degrees C, or None.
 
-    vram_dir = get_gpu_vram_dir()
-    if vram_dir:
-        try:
-            with open(os.path.join(vram_dir, 'mem_info_vram_used')) as f:
-                used = int(f.read().strip())
-            with open(os.path.join(vram_dir, 'mem_info_vram_total')) as f:
-                total = int(f.read().strip())
-            used_gb = used / (2**30)
-            total_gb = total / (2**30)
-            parts.append(f"{used_gb:.1f}/{total_gb:.0f}G")
-        except (OSError, ValueError):
-            pass
+    Preference order: DDR5 DIMM sensor (spd5118, averaged across
+    reported DIMMs) -> motherboard/chipset sensor (nct*/it87*/asus*)
+    -> None (omit gracefully).
+    """
+    try:
+        temps = psutil.sensors_temperatures()
+    except Exception:
+        return None
 
-    gpu_temp = get_gpu_temp()
-    if gpu_temp is not None:
-        parts.append(f"{gpu_temp}C")
+    if not temps:
+        return None
 
-    if not parts:
-        return "GPU n/a"
-    return "GPU " + " ".join(parts)
+    for key, entries in temps.items():
+        if key.lower().startswith('spd5118') and entries:
+            avg = sum(e.current for e in entries) / len(entries)
+            return round(avg)
+
+    for prefix in ('nct', 'it87', 'asus'):
+        for key, entries in temps.items():
+            if key.lower().startswith(prefix) and entries:
+                return round(entries[0].current)
+
+    return None
+
+
+def get_gpu_busy_percent(vram_dir):
+    """Returns GPU busy percent (utilization) for the given device dir, or None."""
+    if not vram_dir:
+        return None
+    try:
+        with open(os.path.join(vram_dir, 'gpu_busy_percent')) as f:
+            return int(f.read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def get_gpu_vram_text(vram_dir):
+    """Returns 'used/total G' text (one decimal place) for the given device dir, or None."""
+    if not vram_dir:
+        return None
+    try:
+        with open(os.path.join(vram_dir, 'mem_info_vram_used')) as f:
+            used = int(f.read().strip())
+        with open(os.path.join(vram_dir, 'mem_info_vram_total')) as f:
+            total = int(f.read().strip())
+        used_gb = used / (2**30)
+        total_gb = total / (2**30)
+        return f"{used_gb:.1f}/{total_gb:.1f}G"
+    except (OSError, ValueError):
+        return None
 
 
 def format_header_line(width=LCD_WIDTH):
-    """date left (MM/DD/YY), username centered, time right (HH:MM:SS)."""
+    """date left (MM/DD), username centered, time right (HH:MM)."""
     now = datetime.now()
-    date_str = now.strftime("%m/%d/%y")
-    time_str = now.strftime("%H:%M:%S")
+    date_str = now.strftime("%m/%d")
+    time_str = now.strftime("%H:%M")
     username = os.environ.get("USER") or os.environ.get("LOGNAME") or "user"
 
     middle_width = max(width - len(date_str) - len(time_str), 0)
@@ -137,6 +166,35 @@ def format_header_line(width=LCD_WIDTH):
     middle = f"{username:^{middle_width}}"
 
     return f"{date_str}{middle}{time_str}"
+
+
+def format_stat_line(label, center_text, pct, temp, width=LCD_WIDTH):
+    """Builds a strict-column stat line.
+
+    Layout (right to left): temp field (width 4, fits "100C") flush
+    right at end of line; 2-space gap; pct field (width 4, fits
+    "100%") ending 2 spaces left of the temp field; label flush left;
+    center_text centered in the remaining space between label and the
+    pct field. This guarantees the % and temp columns align vertically
+    across CPU/RAM/GPU lines regardless of centered content length.
+    """
+    TEMP_W = 4
+    PCT_W = 4
+    GAP = 2
+
+    label_str = f"{label:<3}"
+    temp_str = f"{temp}C" if temp is not None else ""
+    temp_field = f"{temp_str:>{TEMP_W}}"
+    pct_str = f"{pct:.0f}%" if pct is not None else ""
+    pct_field = f"{pct_str:>{PCT_W}}"
+    right_part = f"{pct_field}{' ' * GAP}{temp_field}"
+
+    left_width = max(width - len(label_str) - len(right_part), 0)
+    centered = f"{center_text:^{left_width}}"
+    if len(centered) > left_width:
+        centered = centered[:left_width]
+
+    return f"{label_str}{centered}{right_part}"
 
 
 def write_to_pipe(message):
@@ -165,20 +223,27 @@ def main():
             cpu_percent = psutil.cpu_percent(interval=None)
             ram = psutil.virtual_memory()
             cpu_temp = get_cpu_temp()
+            ram_temp = get_ram_temp()
+            gpu_vram_dir = get_gpu_vram_dir()
+            gpu_vram_text = get_gpu_vram_text(gpu_vram_dir) or "n/a"
+            gpu_busy = get_gpu_busy_percent(gpu_vram_dir)
+            gpu_temp = get_gpu_temp()
 
             # 2. Create Layout (max 6 lines of 26 chars)
             # Line 1: date | username | time (no labels)
             line1 = format_header_line()
 
             # Line 2: CPU bar/percent + package temp
-            temp_str = f" {cpu_temp}C" if cpu_temp is not None else ""
-            line2 = f"CPU {create_bar(cpu_percent, 10)} {int(cpu_percent):>3}%{temp_str}"
+            line2 = format_stat_line(
+                "CPU", create_bar(cpu_percent, 10), cpu_percent, cpu_temp
+            )
 
             # Line 3: RAM usage
-            line3 = f"RAM {format_bytes(ram.used)}/{format_bytes(ram.total)}G {ram.percent:.0f}%"
+            ram_text = f"{format_bytes(ram.used)}/{format_bytes(ram.total)}G"
+            line3 = format_stat_line("RAM", ram_text, ram.percent, ram_temp)
 
-            # Line 4: GPU VRAM usage + temp
-            line4 = get_gpu_line()
+            # Line 4: GPU VRAM usage + busy% + temp
+            line4 = format_stat_line("GPU", gpu_vram_text, gpu_busy, gpu_temp)
 
             # Line 5: reserved for future use (left blank)
             line5 = ""
