@@ -1,3 +1,4 @@
 .superpowers/
 driver/g13-driver/build/
 driver/g13-driver/Linux-G13-Driver
+__pycache__/
