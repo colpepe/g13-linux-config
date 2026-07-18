@@ -1,0 +1,456 @@
+<title>G13 Reference — Fusion 360 &amp; Gaming</title>
+<style>
+  :root {
+    --ink: #1b1d22;
+    --ink-soft: #55596b;
+    --paper: #f4f5f8;
+    --panel: #ffffff;
+    --line: #d8dbe3;
+    --key-bg: #ffffff;
+    --key-name: #1b1d22;
+    --key-action: #4a4e5e;
+    --shadow: 0 1px 2px rgba(20, 22, 30, 0.08);
+    --fusion: #ff5000;
+    --fusion-tint: #fff1e9;
+    --fusion-line: #ffc9a8;
+    --gaming: #0050ff;
+    --gaming-tint: #ecf1ff;
+    --gaming-line: #aec2ff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eceef2;
+      --ink-soft: #a7abbb;
+      --paper: #16181d;
+      --panel: #1e2127;
+      --line: #33363f;
+      --key-bg: #262a32;
+      --key-name: #f1f2f5;
+      --key-action: #b7bbc9;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --fusion-tint: #2a1a10;
+      --fusion-line: #6b3316;
+      --gaming-tint: #101a2e;
+      --gaming-line: #253a6b;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #eceef2;
+    --ink-soft: #a7abbb;
+    --paper: #16181d;
+    --panel: #1e2127;
+    --line: #33363f;
+    --key-bg: #262a32;
+    --key-name: #f1f2f5;
+    --key-action: #b7bbc9;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --fusion-tint: #2a1a10;
+    --fusion-line: #6b3316;
+    --gaming-tint: #101a2e;
+    --gaming-line: #253a6b;
+  }
+
+  :root[data-theme="light"] {
+    --ink: #1b1d22;
+    --ink-soft: #55596b;
+    --paper: #f4f5f8;
+    --panel: #ffffff;
+    --line: #d8dbe3;
+    --key-bg: #ffffff;
+    --key-name: #1b1d22;
+    --key-action: #4a4e5e;
+    --shadow: 0 1px 2px rgba(20, 22, 30, 0.08);
+    --fusion-tint: #fff1e9;
+    --fusion-line: #ffc9a8;
+    --gaming-tint: #ecf1ff;
+    --gaming-line: #aec2ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 2.5rem 1.5rem 4rem;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .masthead {
+    max-width: 46rem;
+    width: 100%;
+    text-align: left;
+  }
+
+  .masthead .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+  }
+
+  .masthead h1 {
+    font-size: 1.7rem;
+    line-height: 1.2;
+    margin: 0 0 0.3rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+
+  .masthead p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    max-width: 38rem;
+  }
+
+  .profile {
+    width: 100%;
+    max-width: 46rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.6rem 1.6rem 1.8rem;
+    box-shadow: var(--shadow);
+  }
+
+  .profile.fusion { border-top: 4px solid var(--fusion); }
+  .profile.gaming { border-top: 4px solid var(--gaming); }
+
+  .profile-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+
+  .profile-head h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  .fusion .profile-head h2 { color: var(--fusion); }
+  .gaming .profile-head h2 { color: var(--gaming); }
+
+  .softkey-banner {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .fusion .softkey-banner {
+    background: var(--fusion-tint);
+    color: var(--fusion);
+    border: 1px solid var(--fusion-line);
+  }
+
+  .gaming .softkey-banner {
+    background: var(--gaming-tint);
+    color: var(--gaming);
+    border: 1px solid var(--gaming-line);
+  }
+
+  .board-scroll {
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+  }
+
+  .board {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.6rem;
+    width: max-content;
+    min-width: 100%;
+    padding: 0.4rem 0.1rem;
+  }
+
+  .key-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .row-1 { margin-left: 0; }
+  .row-2 { margin-left: 1.1rem; }
+  .row-3 { margin-left: 2.2rem; }
+  .row-4 { margin-left: 3.3rem; }
+
+  .key {
+    width: 5.4rem;
+    min-height: 3.5rem;
+    background: var(--key-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.35rem 0.45rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+
+  .key .name {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--key-name);
+    letter-spacing: 0.01em;
+  }
+
+  .fusion .key .name { color: var(--fusion); }
+  .gaming .key .name { color: var(--gaming); }
+
+  .key .action {
+    font-size: 0.74rem;
+    color: var(--key-action);
+    line-height: 1.2;
+  }
+
+  .thumb-cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.9rem;
+    padding-left: 0.2rem;
+    border-left: 1px dashed var(--line);
+    padding-left: 1rem;
+  }
+
+  .thumb-cluster .cluster-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 0.1rem;
+  }
+
+  .stick-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 3.1rem);
+    grid-template-rows: repeat(3, 2.5rem);
+    gap: 0.3rem;
+  }
+
+  .stick-pad .key { width: auto; min-height: auto; align-items: center; text-align: center; }
+  .stick-pad .cell-up { grid-column: 2; grid-row: 1; }
+  .stick-pad .cell-left { grid-column: 1; grid-row: 2; }
+  .stick-pad .cell-click { grid-column: 2; grid-row: 2; }
+  .stick-pad .cell-right { grid-column: 3; grid-row: 2; }
+  .stick-pad .cell-down { grid-column: 2; grid-row: 3; }
+
+  .stick-orbit {
+    width: 9.9rem;
+    min-height: 5.4rem;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+  .stick-orbit .name, .stick-orbit .action { text-align: center; }
+
+  .thumb-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .thumb-buttons .key { width: 4.75rem; text-align: center; align-items: center; }
+  .thumb-buttons .key .name, .thumb-buttons .key .action { text-align: center; }
+
+  .footnote {
+    margin-top: 1.2rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .footnote code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.05rem 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  footer.page-note {
+    max-width: 46rem;
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media print {
+    body {
+      background: #ffffff;
+      color: #111111;
+      padding: 0.5in;
+      gap: 0;
+      display: block;
+    }
+    .masthead { margin-bottom: 0.3in; }
+    .profile {
+      box-shadow: none;
+      border: 1px solid #999999;
+      background: #ffffff;
+      page-break-after: always;
+      break-after: page;
+    }
+    .profile:last-of-type { page-break-after: auto; break-after: auto; }
+    .key { background: #ffffff; border-color: #999999; }
+    .key .name { color: #111111 !important; }
+    .fusion .profile-head h2,
+    .fusion .softkey-banner,
+    .gaming .profile-head h2,
+    .gaming .softkey-banner {
+      color: #111111;
+    }
+    .softkey-banner {
+      background: #ffffff !important;
+      border: 1px solid #999999 !important;
+    }
+    .key .action, .footnote, .cluster-label { color: #333333; }
+    footer.page-note { display: none; }
+  }
+</style>
+
+<div class="masthead">
+  <p class="eyebrow">Logitech G13 · Linux driver</p>
+  <h1>G13 Reference — Fusion 360 &amp; Gaming</h1>
+  <p>Physical key layout for both profiles, exactly as bound in <code>bindings-0.properties</code> (Fusion 360, softkey 1) and <code>bindings-1.properties</code> (Gaming, softkey 2). Print for a desk card — each profile breaks to its own page.</p>
+</div>
+
+<section class="profile fusion">
+  <div class="profile-head">
+    <h2>Fusion 360</h2>
+    <span class="softkey-banner">Softkey 1 → this profile</span>
+  </div>
+  <div class="board-scroll">
+    <div class="board">
+      <div class="key-rows">
+        <div class="row row-1">
+          <div class="key"><span class="name">G1</span><span class="action">Undo</span></div>
+          <div class="key"><span class="name">G2</span><span class="action">Redo</span></div>
+          <div class="key"><span class="name">G3</span><span class="action">Delete</span></div>
+          <div class="key"><span class="name">G4</span><span class="action">Pan ↑</span></div>
+          <div class="key"><span class="name">G5</span><span class="action">Measure (I)</span></div>
+          <div class="key"><span class="name">G6</span><span class="action">Offset (O)</span></div>
+          <div class="key"><span class="name">G7</span><span class="action">Joint (J)</span></div>
+        </div>
+        <div class="row row-2">
+          <div class="key"><span class="name">G8</span><span class="action">Toolbox (S)</span></div>
+          <div class="key"><span class="name">G9</span><span class="action">Extrude (E)</span></div>
+          <div class="key"><span class="name">G10</span><span class="action">Pan ←</span></div>
+          <div class="key"><span class="name">G11</span><span class="action">Pan ↓</span></div>
+          <div class="key"><span class="name">G12</span><span class="action">Pan →</span></div>
+          <div class="key"><span class="name">G13</span><span class="action">Press/Pull (Q)</span></div>
+          <div class="key"><span class="name">G14</span><span class="action">Fillet (F)</span></div>
+        </div>
+        <div class="row row-3">
+          <div class="key"><span class="name">G15</span><span class="action">Line (L)</span></div>
+          <div class="key"><span class="name">G16</span><span class="action">Rectangle (R)</span></div>
+          <div class="key"><span class="name">G17</span><span class="action">Circle (C)</span></div>
+          <div class="key"><span class="name">G18</span><span class="action">Dimension (D)</span></div>
+          <div class="key"><span class="name">G19</span><span class="action">Construction (X)</span></div>
+        </div>
+        <div class="row row-4">
+          <div class="key"><span class="name">G20</span><span class="action">Trim (T)</span></div>
+          <div class="key"><span class="name">G21</span><span class="action">Project (P)</span></div>
+          <div class="key"><span class="name">G22</span><span class="action">Move (M)</span></div>
+        </div>
+      </div>
+      <div class="thumb-cluster">
+        <span class="cluster-label">Thumb cluster</span>
+        <div class="key stick-orbit"><span class="name">Stick</span><span class="action">Orbit (Shift+MMB drag)</span></div>
+        <div class="thumb-buttons">
+          <div class="key"><span class="name">Thumb L</span><span class="action">Esc</span></div>
+          <div class="key"><span class="name">Thumb D</span><span class="action">Enter</span></div>
+        </div>
+        <div class="key"><span class="name">Stick click</span><span class="action">Fit view</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footnote">
+    Stick orbit is a held modifier: hold <strong>Shift+MMB</strong> and deflect the stick to orbit the view — drag speed is tunable via <code>stick_speed</code> in <code>~/.config/g13/bindings-0.properties</code>. Stick click sends a double middle-click, mapped in Fusion 360 to <strong>Fit view</strong>.
+  </div>
+</section>
+
+<section class="profile gaming">
+  <div class="profile-head">
+    <h2>Gaming</h2>
+    <span class="softkey-banner">Softkey 2 (3 &amp; 4 are clones)</span>
+  </div>
+  <div class="board-scroll">
+    <div class="board">
+      <div class="key-rows">
+        <div class="row row-1">
+          <div class="key"><span class="name">G1</span><span class="action">Esc</span></div>
+          <div class="key"><span class="name">G2</span><span class="action">Tab</span></div>
+          <div class="key"><span class="name">G3</span><span class="action">Q</span></div>
+          <div class="key"><span class="name">G4</span><span class="action">W</span></div>
+          <div class="key"><span class="name">G5</span><span class="action">E</span></div>
+          <div class="key"><span class="name">G6</span><span class="action">R</span></div>
+          <div class="key"><span class="name">G7</span><span class="action">T</span></div>
+        </div>
+        <div class="row row-2">
+          <div class="key"><span class="name">G8</span><span class="action">1</span></div>
+          <div class="key"><span class="name">G9</span><span class="action">2</span></div>
+          <div class="key"><span class="name">G10</span><span class="action">A</span></div>
+          <div class="key"><span class="name">G11</span><span class="action">S</span></div>
+          <div class="key"><span class="name">G12</span><span class="action">D</span></div>
+          <div class="key"><span class="name">G13</span><span class="action">F</span></div>
+          <div class="key"><span class="name">G14</span><span class="action">G</span></div>
+        </div>
+        <div class="row row-3">
+          <div class="key"><span class="name">G15</span><span class="action">LShift</span></div>
+          <div class="key"><span class="name">G16</span><span class="action">Z</span></div>
+          <div class="key"><span class="name">G17</span><span class="action">X</span></div>
+          <div class="key"><span class="name">G18</span><span class="action">C</span></div>
+          <div class="key"><span class="name">G19</span><span class="action">V</span></div>
+        </div>
+        <div class="row row-4">
+          <div class="key"><span class="name">G20</span><span class="action">LCtrl</span></div>
+          <div class="key"><span class="name">G21</span><span class="action">B</span></div>
+          <div class="key"><span class="name">G22</span><span class="action">M</span></div>
+        </div>
+      </div>
+      <div class="thumb-cluster">
+        <span class="cluster-label">Thumb cluster</span>
+        <div class="stick-pad">
+          <div class="key cell-up"><span class="name">▲</span><span class="action">W</span></div>
+          <div class="key cell-left"><span class="name">◀</span><span class="action">A</span></div>
+          <div class="key cell-click"><span class="name">Click</span><span class="action">Mid-mouse</span></div>
+          <div class="key cell-right"><span class="name">▶</span><span class="action">D</span></div>
+          <div class="key cell-down"><span class="name">▼</span><span class="action">S</span></div>
+        </div>
+        <div class="thumb-buttons">
+          <div class="key"><span class="name">Thumb L</span><span class="action">Space</span></div>
+          <div class="key"><span class="name">Thumb D</span><span class="action">LAlt</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footnote">
+    Stick acts as WASD (up/left/right/down); stick click sends a middle-click. Softkeys 3 &amp; 4 (<code>bindings-2.properties</code>, <code>bindings-3.properties</code>) are placeholder clones of this profile.
+  </div>
+</section>
+
+<footer class="page-note">G13 Linux Config · reference/g13-reference.html · print for a two-page desk card, one profile per side.</footer>
