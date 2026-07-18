@@ -15,12 +15,19 @@ PIPE_PATH = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "g13-lcd")
 # floor(158 / 6) = 26.
 LCD_WIDTH = 26
 
+# Path to the driver's active-profile state file (must match the path the
+# C++ driver writes in G13::loadBindings).
+PROFILE_STATE_PATH = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "g13-profile")
 
-def create_bar(percent, length=10):
-    """Creates a simple ASCII loading bar."""
-    filled_length = int(length * percent // 100)
-    bar = 'X' * filled_length + '-' * (length - filled_length)
-    return f"[{bar}]"
+
+def get_active_profile():
+    """Returns the active profile number as a string, or '?' if unavailable."""
+    try:
+        with open(PROFILE_STATE_PATH) as f:
+            value = f.read().strip()
+            return value if value else "?"
+    except OSError:
+        return "?"
 
 
 def format_bytes(size):
@@ -154,16 +161,16 @@ def get_gpu_vram_text(vram_dir):
 
 
 def format_header_line(width=LCD_WIDTH):
-    """date left (MM/DD), username centered, time right (HH:MM)."""
+    """date left (MM/DD/YY), active profile "G13:X" centered, time right (HH:MM:SS)."""
     now = datetime.now()
-    date_str = now.strftime("%m/%d")
-    time_str = now.strftime("%H:%M")
-    username = os.environ.get("USER") or os.environ.get("LOGNAME") or "user"
+    date_str = now.strftime("%m/%d/%y")
+    time_str = now.strftime("%H:%M:%S")
+    profile_str = f"G13:{get_active_profile()}"
 
     middle_width = max(width - len(date_str) - len(time_str), 0)
-    if len(username) > middle_width:
-        username = username[:middle_width]
-    middle = f"{username:^{middle_width}}"
+    if len(profile_str) > middle_width:
+        profile_str = profile_str[:middle_width]
+    middle = f"{profile_str:^{middle_width}}"
 
     return f"{date_str}{middle}{time_str}"
 
@@ -172,15 +179,19 @@ def format_stat_line(label, center_text, pct, temp, width=LCD_WIDTH):
     """Builds a strict-column stat line.
 
     Layout (right to left): temp field (width 4, fits "100C") flush
-    right at end of line; 2-space gap; pct field (width 4, fits
-    "100%") ending 2 spaces left of the temp field; label flush left;
-    center_text centered in the remaining space between label and the
-    pct field. This guarantees the % and temp columns align vertically
-    across CPU/RAM/GPU lines regardless of centered content length.
+    right at end of line; 1-space gap; pct field (width 4, fits
+    "100%") ending 1 space left of the temp field (pct field ends at
+    index 20); label flush left; center_text centered in the
+    remaining space between label and the pct field, then shifted 2
+    spaces right of its natural centered position (truncated to fit
+    if needed). This guarantees the % and temp columns align
+    vertically across CPU/RAM/GPU lines regardless of centered
+    content length.
     """
     TEMP_W = 4
     PCT_W = 4
-    GAP = 2
+    GAP = 1
+    CENTER_SHIFT = 2
 
     label_str = f"{label:<3}"
     temp_str = f"{temp}C" if temp is not None else ""
@@ -191,6 +202,13 @@ def format_stat_line(label, center_text, pct, temp, width=LCD_WIDTH):
 
     left_width = max(width - len(label_str) - len(right_part), 0)
     centered = f"{center_text:^{left_width}}"
+
+    # Shift the centered content right by CENTER_SHIFT spaces, sliding text
+    # out of the leading spaces rather than growing the field.
+    shift = min(CENTER_SHIFT, left_width)
+    if shift:
+        centered = (" " * shift + centered)[:left_width]
+
     if len(centered) > left_width:
         centered = centered[:left_width]
 
@@ -233,10 +251,8 @@ def main():
             # Line 1: date | username | time (no labels)
             line1 = format_header_line()
 
-            # Line 2: CPU bar/percent + package temp
-            line2 = format_stat_line(
-                "CPU", create_bar(cpu_percent, 10), cpu_percent, cpu_temp
-            )
+            # Line 2: CPU percent + package temp (no bar)
+            line2 = format_stat_line("CPU", "", cpu_percent, cpu_temp)
 
             # Line 3: RAM usage
             ram_text = f"{format_bytes(ram.used)}/{format_bytes(ram.total)}G"
