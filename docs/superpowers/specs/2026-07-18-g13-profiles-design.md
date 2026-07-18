@@ -65,10 +65,10 @@ keycodes into mouse events — extra always-running service, laggier; and
 ## Profile 0 — Fusion 360 (softkey 1, `color=255,80,0` orange)
 
 - `stick_mode=mouse`, `stick_hold=42+274` (Shift+MMB) → **orbit**
-- Stick click (G34) → macro: double middle-click = **fit view** (Fusion's
+- Stick click (G35) → macro: double middle-click = **fit view** (Fusion's
   native gesture)
 - G4/G10/G11/G12 → `mp` pan up/left/down/right
-- Thumb buttons: G32 (left thumb) = **Esc**, G33 (down thumb) = **Enter**
+- Thumb buttons: G33 (left thumb) = **Esc**, G34 (down thumb) = **Enter**
 - Remaining keys, grouped by row (draft — exact placement finalized on the
   reference card; trivially reshufflable via the text config):
 
@@ -92,7 +92,7 @@ keycodes into mouse events — extra always-running service, laggier; and
 | 2: G8–G14 | 1, 2, **A**, **S**, **D**, F, G |
 | 3: G15–G19 | LShift, Z, X, C, V |
 | 4: G20–G22 | LCtrl, B, M |
-| Thumb | G32 = Space, G33 = LAlt, stick click (G34) = middle mouse (BTN_MIDDLE, now available) |
+| Thumb | G33 = Space, G34 = LAlt, stick click (G35) = middle mouse (BTN_MIDDLE, now available) |
 | Stick | up=W, left=A, down=S, right=D |
 
 ## LCD system stats
