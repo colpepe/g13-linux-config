@@ -178,41 +178,26 @@ def format_header_line(width=LCD_WIDTH):
 def format_stat_line(label, center_text, pct, temp, width=LCD_WIDTH):
     """Builds a strict-column stat line.
 
-    Layout (right to left): temp field (width 4, fits "100C") flush
-    right at end of line; 1-space gap; pct field (width 4, fits
-    "100%") ending 1 space left of the temp field (pct field ends at
-    index 20); label flush left; center_text centered in the
-    remaining space between label and the pct field, then shifted 2
-    spaces right of its natural centered position (truncated to fit
-    if needed). This guarantees the % and temp columns align
-    vertically across CPU/RAM/GPU lines regardless of centered
-    content length.
+    Fixed columns on a 26-char line: label flush left (3); memory
+    fraction right-aligned in a 14-char field so its final char (the
+    "G") always lands at index 16 on every line; one space; pct field
+    (width 4, zero-padded to two digits, fits "100%") ending at index
+    21; temp field (width 4, fits "100C") flush right ending at index
+    25. The shared right edges keep the G's, %'s and C's vertically
+    aligned across CPU/RAM/GPU lines.
     """
     TEMP_W = 4
     PCT_W = 4
-    GAP = 1
-    CENTER_SHIFT = 2
+    MEM_W = width - 3 - 1 - PCT_W - TEMP_W  # 14 on a 26-char line
 
     label_str = f"{label:<3}"
     temp_str = f"{temp}C" if temp is not None else ""
     temp_field = f"{temp_str:>{TEMP_W}}"
-    pct_str = f"{pct:.0f}%" if pct is not None else ""
+    pct_str = f"{pct:02.0f}%" if pct is not None else ""
     pct_field = f"{pct_str:>{PCT_W}}"
-    right_part = f"{pct_field}{' ' * GAP}{temp_field}"
+    mem_field = f"{center_text:>{MEM_W}}"[:MEM_W]
 
-    left_width = max(width - len(label_str) - len(right_part), 0)
-    centered = f"{center_text:^{left_width}}"
-
-    # Shift the centered content right by CENTER_SHIFT spaces, sliding text
-    # out of the leading spaces rather than growing the field.
-    shift = min(CENTER_SHIFT, left_width)
-    if shift:
-        centered = (" " * shift + centered)[:left_width]
-
-    if len(centered) > left_width:
-        centered = centered[:left_width]
-
-    return f"{label_str}{centered}{right_part}"
+    return f"{label_str}{mem_field} {pct_field}{temp_field}"
 
 
 def write_to_pipe(message):
