@@ -65,7 +65,19 @@ class MainWindow(QMainWindow):
         return shorts, tips
 
     def _on_key_clicked(self, phys: str):
-        print(f"clicked {phys}")  # replaced by the binding dialog in Task 11
+        from .binding_dialog import BindingEditorDialog
+        from .model import PHYS_TO_INDEX
+        idx = PHYS_TO_INDEX[phys]
+        profile = self.current_profile()
+        dialog = BindingEditorDialog(phys, profile.bindings.get(idx), self.macro_pool, self)
+        if dialog.exec():
+            result = dialog.result_binding()
+            if result is None:
+                profile.bindings.pop(idx, None)
+            else:
+                profile.bindings[idx] = result
+            self.mark_dirty()
+            self.refresh_ui()
 
     def refresh_ui(self):
         self._refresh_tab_chips()
