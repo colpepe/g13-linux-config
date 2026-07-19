@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 from . import keycodes
-from .macros import Macro, MacroStep, serialize_macro
+from .macros import MAX_MACROS, Macro, MacroStep
 
 
 def _step_text(s: MacroStep) -> str:
@@ -85,7 +85,10 @@ class MacroEditorDialog(QDialog):
                 self.steps.addItem(_step_text(s))
 
     def _new_macro(self):
-        mid = self.store.next_free_macro_id()
+        used = set(self.pool) | set(self.store.load_macros())
+        mid = next((i for i in range(MAX_MACROS) if i not in used), None)
+        if mid is None:
+            return
         name, ok = QInputDialog.getText(self, "New macro", "Name:")
         if not ok:
             return
@@ -106,6 +109,14 @@ class MacroEditorDialog(QDialog):
             self.record_btn.setText("● Record")
             self.releaseKeyboard()
             self._reload_steps()
+
+        for w in (self.macro_list, self.new_btn, self.save_btn, self.add_delay_btn, self.del_step_btn):
+            w.setEnabled(not self._recording)
+
+    def done(self, result: int):
+        if self._recording:
+            self._toggle_record()  # releases keyboard grab, resets button state
+        super().done(result)
 
     def _record_step(self, kind: str, code: int):
         now = time.monotonic()
