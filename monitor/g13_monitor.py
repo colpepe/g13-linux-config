@@ -206,15 +206,20 @@ def write_to_pipe(message):
         print(f"Error: Pipe {PIPE_PATH} not found. Is the driver running?")
         return
 
+    # Open non-blocking: a plain open() blocks until the driver reads, and if
+    # the driver recreates the FIFO mid-open (restart) we'd hang forever on an
+    # orphaned inode. ENXIO just means no reader yet — skip this cycle.
     try:
-        # We reopen the pipe on every write.
-        # This is safe for Named Pipes on Linux and prevents deadlocks.
-        with open(PIPE_PATH, 'w') as pipe:
-            pipe.write(message)
+        fd = os.open(PIPE_PATH, os.O_WRONLY | os.O_NONBLOCK)
+    except OSError as e:
+        print(f"LCD pipe has no reader yet ({e}); skipping this update.")
+        return
+    try:
+        os.write(fd, message.encode())
     except OSError as e:
         print(f"Error writing to pipe: {e}")
-    except BrokenPipeError:
-        print("Driver closed the connection.")
+    finally:
+        os.close(fd)
 
 
 def main():
