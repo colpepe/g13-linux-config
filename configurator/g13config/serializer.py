@@ -52,6 +52,8 @@ def atomic_write(path: Path, text: str) -> None:
     try:
         with os.fdopen(fd, "w") as f:
             f.write(text)
+        mode = path.stat().st_mode & 0o7777 if path.exists() else 0o644
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:
         os.unlink(tmp)

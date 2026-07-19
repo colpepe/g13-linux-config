@@ -63,3 +63,7 @@ def test_atomic_write(tmp_path):
     atomic_write(target, "name=Y\n")  # overwrite existing
     assert target.read_text() == "name=Y\n"
     assert list(tmp_path.iterdir()) == [target]  # no temp file left behind
+    assert (target.stat().st_mode & 0o777) == 0o644  # fresh file gets 644
+    target.chmod(0o600)
+    atomic_write(target, "name=Z\n")
+    assert (target.stat().st_mode & 0o777) == 0o600  # existing mode preserved
