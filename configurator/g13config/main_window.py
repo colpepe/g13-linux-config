@@ -35,6 +35,11 @@ class MainWindow(QMainWindow):
         self.overlay = G13OverlayWidget()
         self.overlay.keyClicked.connect(self._on_key_clicked)
         self.central_row.addWidget(self.overlay)
+        from .settings_panel import ProfileSettingsPanel
+        self.settings = ProfileSettingsPanel()
+        self.settings.changed.connect(self._on_settings_changed)
+        self.settings.editMacros.connect(self._open_macro_editor)
+        self.central_row.addWidget(self.settings)
         column.addLayout(self.central_row)
         column.addStretch()
         self.setCentralWidget(central)
@@ -82,6 +87,16 @@ class MainWindow(QMainWindow):
         self._refresh_tab_chips()
         shorts, tips = self._overlay_labels()
         self.overlay.set_labels(shorts, tips, QColor(*self.current_profile().color))
+        self.settings.set_profile(self.current_profile())
+
+    def _on_settings_changed(self):
+        self.mark_dirty()
+        self.refresh_ui()
+
+    def _open_macro_editor(self):
+        from .macro_editor import MacroEditorDialog
+        MacroEditorDialog(self.store, self.macro_pool, self).exec()
+        self.refresh_ui()  # macro names on keycaps may have changed
 
     def mark_dirty(self):
         """Dirty tracking arrives in Task 13."""
