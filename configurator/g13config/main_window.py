@@ -1,10 +1,22 @@
 """Main window: profile tabs, toolbar, overlay + settings panel row."""
-from PySide6.QtGui import QColor, QIcon, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QTabBar, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtCore import QFileSystemWatcher
+from PySide6.QtGui import QAction, QColor, QIcon, QPixmap
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QSizePolicy,
+    QTabBar,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import labels as labels_mod
 from .model import PHYS_TO_INDEX
 from .overlay import G13OverlayWidget
+from .serializer import serialize_profile
 from .store import ConfigStore
 
 SLOTS = range(4)
@@ -17,11 +29,25 @@ class MainWindow(QMainWindow):
         self.profiles = [store.load_profile(s) for s in SLOTS]
         self.macro_pool = store.load_macros()
         self.current_slot = 0
+        self._baseline = {p.slot: serialize_profile(p) for p in self.profiles}
+        self._applying = False
 
         self.setWindowTitle("G13 Configurator")
         self.toolbar = QToolBar("Main")
         self.toolbar.setMovable(False)
         self.addToolBar(self.toolbar)
+
+        self.dirty_label = QLabel("")
+        self.act_revert = QAction("Revert", self)
+        self.act_apply = QAction("Apply", self)
+        self.act_revert.triggered.connect(self.revert)
+        self.act_apply.triggered.connect(self.apply)
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addWidget(self.dirty_label)
+        self.toolbar.addAction(self.act_revert)
+        self.toolbar.addAction(self.act_apply)
 
         self.tabs = QTabBar()
         for p in self.profiles:
@@ -44,6 +70,13 @@ class MainWindow(QMainWindow):
         column.addStretch()
         self.setCentralWidget(central)
         self.refresh_ui()
+
+        self.watcher = QFileSystemWatcher([str(self.store.config_dir)], self)
+        self.watcher.directoryChanged.connect(self._on_external_change)
+
+        for p in self.profiles:
+            if p.warnings:
+                QMessageBox.warning(self, f"Slot {p.slot + 1} parse warnings", "\n".join(p.warnings))
 
     def current_profile(self):
         return self.profiles[self.current_slot]
@@ -98,5 +131,41 @@ class MainWindow(QMainWindow):
         MacroEditorDialog(self.store, self.macro_pool, self).exec()
         self.refresh_ui()  # macro names on keycaps may have changed
 
+    def _dirty_slots(self) -> list[int]:
+        return [p.slot for p in self.profiles if serialize_profile(p) != self._baseline[p.slot]]
+
     def mark_dirty(self):
-        """Dirty tracking arrives in Task 13."""
+        n = len(self._dirty_slots())
+        self.dirty_label.setText(f"● {n} unsaved profile(s)  " if n else "")
+        self.setWindowTitle("G13 Configurator" + (" *" if n else ""))
+
+    def apply(self):
+        self._applying = True
+        try:
+            for slot in self._dirty_slots():
+                self.store.save_profile(self.profiles[slot])
+                self._baseline[slot] = serialize_profile(self.profiles[slot])
+        finally:
+            self._applying = False
+        self.mark_dirty()
+
+    def revert(self):
+        self.profiles = [self.store.load_profile(s) for s in SLOTS]
+        self._baseline = {p.slot: serialize_profile(p) for p in self.profiles}
+        self.macro_pool = self.store.load_macros()
+        self.mark_dirty()
+        self.refresh_ui()
+        for p in self.profiles:
+            if p.warnings:
+                QMessageBox.warning(self, f"Slot {p.slot + 1} parse warnings", "\n".join(p.warnings))
+
+    def _on_external_change(self, _path: str):
+        if self._applying:
+            return
+        answer = QMessageBox.question(
+            self, "Config changed on disk",
+            "The G13 config was modified outside this tool.\n"
+            "Reload from disk? (Unsaved edits here will be lost.)",
+            QMessageBox.Yes | QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            self.revert()
