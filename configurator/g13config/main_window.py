@@ -2,6 +2,9 @@
 from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QTabBar, QToolBar, QVBoxLayout, QWidget
 
+from . import labels as labels_mod
+from .model import PHYS_TO_INDEX
+from .overlay import G13OverlayWidget
 from .store import ConfigStore
 
 SLOTS = range(4)
@@ -29,10 +32,13 @@ class MainWindow(QMainWindow):
         column = QVBoxLayout(central)
         column.addWidget(self.tabs)
         self.central_row = QHBoxLayout()
+        self.overlay = G13OverlayWidget()
+        self.overlay.keyClicked.connect(self._on_key_clicked)
+        self.central_row.addWidget(self.overlay)
         column.addLayout(self.central_row)
         column.addStretch()
         self.setCentralWidget(central)
-        self._refresh_tab_chips()
+        self.refresh_ui()
 
     def current_profile(self):
         return self.profiles[self.current_slot]
@@ -48,9 +54,23 @@ class MainWindow(QMainWindow):
             self.tabs.setTabIcon(p.slot, QIcon(pix))
             self.tabs.setTabText(p.slot, p.name or f"Slot {p.slot + 1}")
 
+    def _overlay_labels(self):
+        p = self.current_profile()
+        shorts = {"__lcd__": p.name}
+        tips = {}
+        for phys, idx in PHYS_TO_INDEX.items():
+            binding = p.bindings.get(idx)
+            shorts[phys] = labels_mod.short_label(binding, self.macro_pool)
+            tips[phys] = labels_mod.long_label(binding, self.macro_pool)
+        return shorts, tips
+
+    def _on_key_clicked(self, phys: str):
+        print(f"clicked {phys}")  # replaced by the binding dialog in Task 11
+
     def refresh_ui(self):
-        """Re-sync widgets from the current profile. Later tasks extend this."""
         self._refresh_tab_chips()
+        shorts, tips = self._overlay_labels()
+        self.overlay.set_labels(shorts, tips, QColor(*self.current_profile().color))
 
     def mark_dirty(self):
         """Dirty tracking arrives in Task 13."""
