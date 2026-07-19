@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=G13 Configurator
+Comment=Reprogram the Logitech G13 gameboard
+Exec=g13-config
+Icon=input-gaming
+Categories=Utility;Settings;
+Terminal=false

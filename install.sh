@@ -33,6 +33,20 @@ else
     sudo udevadm control --reload-rules && sudo udevadm trigger
 fi
 
+echo "--- Installing configurator ---"
+LIB_DIR="$HOME/.local/lib/g13-configurator"
+mkdir -p "$LIB_DIR" "$HOME/.local/share/applications" "$CFG_DIR/templates"
+rm -rf "$LIB_DIR/g13config"
+cp -r configurator/g13config "$LIB_DIR/"
+cat > "$BIN_DIR/g13-config" <<'EOF'
+#!/usr/bin/env bash
+export PYTHONPATH="$HOME/.local/lib/g13-configurator${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m g13config "$@"
+EOF
+chmod 755 "$BIN_DIR/g13-config"
+install -m 644 g13-config.desktop "$HOME/.local/share/applications/"
+cp -n config/templates/*.properties "$CFG_DIR/templates/" || true
+
 echo "--- Starting services ---"
 systemctl --user daemon-reload
 systemctl --user enable --now g13.service

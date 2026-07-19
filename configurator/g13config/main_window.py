@@ -3,6 +3,7 @@ from PySide6.QtCore import QFileSystemWatcher
 from PySide6.QtGui import QAction, QColor, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 from . import labels as labels_mod
 from .model import PHYS_TO_INDEX
 from .overlay import G13OverlayWidget
+from .parser import parse_profile
 from .serializer import serialize_profile
 from .store import ConfigStore
 
@@ -35,6 +37,15 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar("Main")
         self.toolbar.setMovable(False)
         self.addToolBar(self.toolbar)
+
+        self.act_new_tpl = QAction("New from template", self)
+        self.act_save_tpl = QAction("Save as template", self)
+        self.act_clone = QAction("Clone to slot", self)
+        self.act_new_tpl.triggered.connect(self._new_from_template)
+        self.act_save_tpl.triggered.connect(self._save_as_template)
+        self.act_clone.triggered.connect(self._clone_to_slot)
+        for act in (self.act_new_tpl, self.act_save_tpl, self.act_clone):
+            self.toolbar.addAction(act)
 
         self.dirty_label = QLabel("")
         self.act_revert = QAction("Revert", self)
@@ -76,6 +87,53 @@ class MainWindow(QMainWindow):
         for p in self.profiles:
             if p.warnings:
                 QMessageBox.warning(self, f"Slot {p.slot + 1} parse warnings", "\n".join(p.warnings))
+
+    def _confirm_overwrite(self, slot: int) -> bool:
+        name = self.profiles[slot].name or f"Slot {slot + 1}"
+        return QMessageBox.question(
+            self, "Overwrite profile",
+            f"Replace '{name}' (slot {slot + 1})? This overwrites its live config on Apply.",
+            QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes
+
+    def _pick_slot(self, title: str) -> int | None:
+        options = [f"{s + 1}: {self.profiles[s].name or '(empty)'}" for s in SLOTS]
+        choice, ok = QInputDialog.getItem(self, title, "Target slot:", options, 0, False)
+        return options.index(choice) if ok else None
+
+    def _new_from_template(self):
+        names = self.store.list_templates()
+        if not names:
+            QMessageBox.information(self, "No templates", "No templates in "
+                                    f"{self.store.templates_dir}")
+            return
+        name, ok = QInputDialog.getItem(self, "New from template", "Template:", names, 0, False)
+        if not ok:
+            return
+        slot = self._pick_slot("Apply template to slot")
+        if slot is None or not self._confirm_overwrite(slot):
+            return
+        template = self.store.load_template(name)
+        template.slot = slot
+        self.profiles[slot] = template
+        self.tabs.setCurrentIndex(slot)
+        self.mark_dirty()
+        self.refresh_ui()
+
+    def _save_as_template(self):
+        name, ok = QInputDialog.getText(self, "Save as template", "Template name:",
+                                        text=self.current_profile().name.lower().replace(" ", "-"))
+        if ok and name:
+            self.store.save_template(self.current_profile(), name)
+
+    def _clone_to_slot(self):
+        slot = self._pick_slot("Clone current profile to slot")
+        if slot is None or slot == self.current_slot or not self._confirm_overwrite(slot):
+            return
+        clone = parse_profile(serialize_profile(self.current_profile()), slot)
+        clone.slot = slot
+        self.profiles[slot] = clone
+        self.mark_dirty()
+        self.refresh_ui()
 
     def current_profile(self):
         return self.profiles[self.current_slot]
