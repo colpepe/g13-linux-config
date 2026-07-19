@@ -30,7 +30,6 @@ class MainWindow(QMainWindow):
         self.macro_pool = store.load_macros()
         self.current_slot = 0
         self._baseline = {p.slot: serialize_profile(p) for p in self.profiles}
-        self._applying = False
 
         self.setWindowTitle("G13 Configurator")
         self.toolbar = QToolBar("Main")
@@ -140,13 +139,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("G13 Configurator" + (" *" if n else ""))
 
     def apply(self):
-        self._applying = True
-        try:
-            for slot in self._dirty_slots():
-                self.store.save_profile(self.profiles[slot])
-                self._baseline[slot] = serialize_profile(self.profiles[slot])
-        finally:
-            self._applying = False
+        for slot in self._dirty_slots():
+            self.store.save_profile(self.profiles[slot])
+            self._baseline[slot] = serialize_profile(self.profiles[slot])
         self.mark_dirty()
 
     def revert(self):
@@ -160,8 +155,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, f"Slot {p.slot + 1} parse warnings", "\n".join(p.warnings))
 
     def _on_external_change(self, _path: str):
-        if self._applying:
-            return
+        disk_state = {s: serialize_profile(self.store.load_profile(s)) for s in SLOTS}
+        if disk_state == self._baseline:
+            return  # our own write, or nothing semantically changed
         answer = QMessageBox.question(
             self, "Config changed on disk",
             "The G13 config was modified outside this tool.\n"
