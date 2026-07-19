@@ -15,6 +15,7 @@ def _profile() -> model.Profile:
     p.bindings[2] = model.MacroBinding(macro_id=1, repeats=2)
     p.bindings[3] = model.MousePanBinding(dx=-5, dy=0)
     p.bindings[9] = model.MousePanBinding(dx=0, dy=5, hold=[272])
+    p.bindings[25] = model.KeyBinding([30])
     p.unknown_lines.append("future_key=whatever")
     return p
 
@@ -31,6 +32,7 @@ def test_serialize_emits_driver_syntax():
     assert "G2=m,1,2" in text
     assert "G3=mp,-5,0" in text
     assert "G9=mp,0,5,272" in text
+    assert "G25=p,k.30" in text
     assert "future_key=whatever" in text
 
 

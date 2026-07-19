@@ -4,7 +4,7 @@ import time
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QDialogButtonBox, QHBoxLayout, QInputDialog, QLineEdit,
-    QListWidget, QListWidgetItem, QPushButton, QVBoxLayout,
+    QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout,
 )
 
 from . import keycodes
@@ -116,6 +116,19 @@ class MacroEditorDialog(QDialog):
     def done(self, result: int):
         if self._recording:
             self._toggle_record()  # releases keyboard grab, resets button state
+        disk = self.store.load_macros()
+        if self.pool != disk:
+            answer = QMessageBox.question(
+                self, "Unsaved macros",
+                "Some macros have unsaved changes. Save them now?",
+                QMessageBox.Yes | QMessageBox.No)
+            if answer == QMessageBox.Yes:
+                for mid, m in self.pool.items():
+                    if disk.get(mid) != m:
+                        self.store.save_macro(m)
+            else:
+                self.pool.clear()
+                self.pool.update(disk)
         super().done(result)
 
     def _record_step(self, kind: str, code: int):
