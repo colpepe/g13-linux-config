@@ -62,8 +62,8 @@ full assignment; the profile's LCD color tints bound keycaps. The 0-based
 - **Key or combo** — capture field: focus, press the real chord, captured
   with Linux input keycodes (Qt provides scancodes; map to evdev codes).
   Searchable dropdown fallback for keys that can't be pressed (media keys).
-- **Macro** — pick from the profile's macros, set repeat count, or open the
-  macro editor.
+- **Macro** — pick from the macro pool (global `macro-N` slots 0–199,
+  shared across all profiles), set repeat count, or open the macro editor.
 - **Mouse pan** — dx/dy step and optional hold-buttons (the `mp` type).
 - **Unbound** — clear the key.
 
@@ -71,7 +71,7 @@ full assignment; the profile's LCD color tints bound keycaps. The 0-based
 (mouse/keys; in keys mode the four direction bindings are editable), stick
 speed, orbit hold-combo.
 
-**Macro editor:** list of the profile's macros; each is a sequence of steps
+**Macro editor:** list of the macro pool; each macro is a sequence of steps
 (key down / key up / delay ms) editable inline, plus **Record mode** —
 capture keys naturally with timing, then trim.
 
