@@ -66,7 +66,6 @@ class MainWindow(QMainWindow):
 
     def _on_key_clicked(self, phys: str):
         from .binding_dialog import BindingEditorDialog
-        from .model import PHYS_TO_INDEX
         idx = PHYS_TO_INDEX[phys]
         profile = self.current_profile()
         dialog = BindingEditorDialog(phys, profile.bindings.get(idx), self.macro_pool, self)

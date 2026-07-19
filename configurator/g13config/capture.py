@@ -34,6 +34,10 @@ class KeyCaptureField(QPushButton):
         self.releaseKeyboard()
         self._render()
 
+    def disarm(self):
+        if self._armed:
+            self._disarm()
+
     def keyPressEvent(self, event):
         if not self._armed:
             return super().keyPressEvent(event)

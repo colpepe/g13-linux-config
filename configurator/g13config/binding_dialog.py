@@ -22,6 +22,7 @@ class BindingEditorDialog(QDialog):
         self.r_none = QRadioButton("Unbound")
 
         self.capture = KeyCaptureField()
+        self.capture.chordCaptured.connect(lambda _codes: self.r_key.setChecked(True))
         self.key_list = QComboBox()
         self.key_list.setEditable(True)
         self.key_list.setPlaceholderText("or pick a key by name…")
@@ -40,6 +41,7 @@ class BindingEditorDialog(QDialog):
         self.pan_dx = QSpinBox(); self.pan_dx.setRange(-100, 100)
         self.pan_dy = QSpinBox(); self.pan_dy.setRange(-100, 100)
         self.pan_hold = KeyCaptureField()
+        self.pan_hold.chordCaptured.connect(lambda _codes: self.r_pan.setChecked(True))
 
         form = QVBoxLayout(self)
         form.addWidget(self.r_key)
@@ -62,6 +64,11 @@ class BindingEditorDialog(QDialog):
         form.addWidget(buttons)
 
         self._load_current(current)
+
+    def done(self, result):
+        self.capture.disarm()
+        self.pan_hold.disarm()
+        super().done(result)
 
     def _load_current(self, b: model.Binding | None):
         if isinstance(b, model.KeyBinding):
