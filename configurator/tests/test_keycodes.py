@@ -38,3 +38,11 @@ def test_is_modifier():
 def test_qt_native_to_evdev_subtracts_xkb_offset():
     # xkb keycode = evdev + 8 on both X11 and Wayland
     assert keycodes.qt_native_to_evdev(38) == 30  # A
+
+
+def test_mouse_buttons_in_tables():
+    assert keycodes.name_for(274) == "BTN_MIDDLE"
+    assert keycodes.code_for_name("BTN_LEFT") == 272
+    assert keycodes.label_for(274) == "MMB"
+    codes = [c for c, _ in keycodes.search("BTN_")]
+    assert {272, 273, 274} <= set(codes)

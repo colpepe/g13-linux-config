@@ -6,9 +6,9 @@ directly over the photographed keycaps.
 """
 from pathlib import Path
 
-from PySide6.QtCore import QRect, Qt, Signal
+from PySide6.QtCore import QEvent, QRect, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QSizePolicy, QToolTip, QWidget
 
 _ASSET = Path(__file__).parent / "assets" / "g13.png"
 
@@ -55,15 +55,6 @@ def _build_key_rects() -> dict[str, QRect]:
     return rects
 
 
-def _scaled(rect: QRect) -> QRect:
-    return QRect(
-        int(rect.x() * SCALE),
-        int(rect.y() * SCALE),
-        int(rect.width() * SCALE),
-        int(rect.height() * SCALE),
-    )
-
-
 class G13OverlayWidget(QWidget):
     keyClicked = Signal(str)
 
@@ -77,8 +68,29 @@ class G13OverlayWidget(QWidget):
         self._hover: str | None = None
         self._pixmap: QPixmap | None = None
         self._scaled_pixmap: QPixmap | None = None
-        self.setFixedSize(round(IMAGE_SIZE[0] * SCALE), round(IMAGE_SIZE[1] * SCALE))
+        self.setMinimumSize(round(IMAGE_SIZE[0] * SCALE), round(IMAGE_SIZE[1] * SCALE))
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMouseTracking(True)
+
+    @property
+    def _scale(self) -> float:
+        # Computed from the live widget size (not cached) so it stays correct
+        # even when resizeEvent hasn't been dispatched yet (e.g. headless/
+        # not-yet-shown widgets, where Qt defers the posted resize event).
+        return min(self.width() / IMAGE_SIZE[0], self.height() / IMAGE_SIZE[1])
+
+    def _scaled(self, rect: QRect) -> QRect:
+        s = self._scale
+        return QRect(
+            int(rect.x() * s),
+            int(rect.y() * s),
+            int(rect.width() * s),
+            int(rect.height() * s),
+        )
+
+    def resizeEvent(self, event):
+        self._scaled_pixmap = None
+        super().resizeEvent(event)
 
     def set_labels(self, labels: dict[str, str], tooltips: dict[str, str], accent: QColor):
         self._labels, self._tooltips, self._accent = labels, tooltips, accent
@@ -86,7 +98,7 @@ class G13OverlayWidget(QWidget):
 
     def _key_at(self, pos) -> str | None:
         for name, rect in self.KEY_RECTS.items():
-            if _scaled(rect).contains(pos):
+            if self._scaled(rect).contains(pos):
                 return name
         return None
 
@@ -94,8 +106,18 @@ class G13OverlayWidget(QWidget):
         name = self._key_at(event.position().toPoint())
         if name != self._hover:
             self._hover = name
-            self.setToolTip(self._tooltips.get(name, "") if name else "")
             self.update()
+
+    def event(self, e):
+        if e.type() == QEvent.Type.ToolTip:
+            name = self._key_at(e.pos())
+            if name and self._tooltips.get(name):
+                QToolTip.showText(e.globalPos(), self._tooltips[name], self)
+            else:
+                QToolTip.hideText()
+                e.ignore()
+            return True
+        return super().event(e)
 
     def mousePressEvent(self, event):
         name = self._key_at(event.position().toPoint())
@@ -118,11 +140,13 @@ class G13OverlayWidget(QWidget):
 
         p.drawPixmap(0, 0, self._scaled_pixmap)
 
+        chip_pt = max(8, round(8 * self._scale / SCALE))
+
         # LCD: current profile name, centered, with a small dark backdrop chip.
-        lcd_rect = _scaled(_LCD_RECT)
+        lcd_rect = self._scaled(_LCD_RECT)
         lcd_text = self._labels.get("__lcd__", "")
         if lcd_text:
-            lcd_font = QFont(self.font().family(), 9, QFont.Bold)
+            lcd_font = QFont(self.font().family(), chip_pt + 1, QFont.Bold)
             p.setFont(lcd_font)
             fm = QFontMetrics(lcd_font)
             text_w = min(lcd_rect.width() - 8, fm.horizontalAdvance(lcd_text) + 16)
@@ -136,10 +160,10 @@ class G13OverlayWidget(QWidget):
             p.drawText(chip, Qt.AlignCenter, elided)
 
         # Keys.
-        label_font = QFont(self.font().family(), 8, QFont.Bold)
+        label_font = QFont(self.font().family(), chip_pt, QFont.Bold)
         fm = QFontMetrics(label_font)
         for name, rect in self.KEY_RECTS.items():
-            disp = _scaled(rect)
+            disp = self._scaled(rect)
             hovered = name == self._hover
             label = self._labels.get(name, "")
 

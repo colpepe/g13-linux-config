@@ -70,14 +70,13 @@ class MainWindow(QMainWindow):
         self.central_row = QHBoxLayout()
         self.overlay = G13OverlayWidget()
         self.overlay.keyClicked.connect(self._on_key_clicked)
-        self.central_row.addWidget(self.overlay)
+        self.central_row.addWidget(self.overlay, 1)
         from .settings_panel import ProfileSettingsPanel
         self.settings = ProfileSettingsPanel()
         self.settings.changed.connect(self._on_settings_changed)
         self.settings.editMacros.connect(self._open_macro_editor)
         self.central_row.addWidget(self.settings)
         column.addLayout(self.central_row)
-        column.addStretch()
         self.setCentralWidget(central)
         self.refresh_ui()
 

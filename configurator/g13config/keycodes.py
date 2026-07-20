@@ -5,13 +5,21 @@ Uses python3-evdev purely as a name table (no device access).
 from evdev import ecodes
 
 # code -> canonical KEY_* name (ecodes.KEY maps some codes to a list of aliases)
+# ecodes.BTN (mouse buttons) is a separate dict from ecodes.KEY, even though
+# both share the same underlying evdev code space. Merge BTN in first so that
+# any real collision leaves the KEY_* name/code as canonical.
 _NAMES: dict[int, str] = {}
+for code, name in ecodes.BTN.items():
+    _NAMES[code] = name[0] if isinstance(name, (list, tuple)) else name
 for code, name in ecodes.KEY.items():
-    _NAMES[code] = name[0] if isinstance(name, list) else name
+    _NAMES[code] = name[0] if isinstance(name, (list, tuple)) else name
 
 _CODES: dict[str, int] = {}
+for code, name in ecodes.BTN.items():
+    for n in name if isinstance(name, (list, tuple)) else [name]:
+        _CODES.setdefault(n, code)
 for code, name in ecodes.KEY.items():
-    for n in name if isinstance(name, list) else [name]:
+    for n in name if isinstance(name, (list, tuple)) else [name]:
         _CODES[n] = code
 
 # Modifiers in canonical chord order: Ctrl, Super, Alt, Shift (left/right pairs)

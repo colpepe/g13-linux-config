@@ -8,6 +8,11 @@ from . import keycodes
 class KeyCaptureField(QPushButton):
     chordCaptured = Signal(list)
 
+    _QT_BUTTON_CODES = {
+        Qt.LeftButton: 272, Qt.RightButton: 273, Qt.MiddleButton: 274,
+        Qt.BackButton: 275, Qt.ForwardButton: 276,
+    }
+
     def __init__(self, codes: list[int] | None = None, parent=None):
         super().__init__(parent)
         self.codes: list[int] = list(codes or [])
@@ -66,3 +71,13 @@ class KeyCaptureField(QPushButton):
         if self._armed:
             self._disarm()
         super().focusOutEvent(event)
+
+    def mousePressEvent(self, event):
+        if self._armed:
+            code = self._QT_BUTTON_CODES.get(event.button())
+            if code is not None:
+                self.codes = self._held_mods + [code]
+                self._disarm()
+                self.chordCaptured.emit(self.codes)
+            return
+        super().mousePressEvent(event)
