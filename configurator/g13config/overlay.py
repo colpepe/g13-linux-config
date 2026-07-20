@@ -12,8 +12,9 @@ from PySide6.QtWidgets import QWidget
 
 _ASSET = Path(__file__).parent / "assets" / "g13.png"
 
-# Photo is 645x1000; the widget displays it scaled down by SCALE (464x720).
+# Photo is 645x1000; the widget displays it scaled down by SCALE.
 SCALE = 0.72
+IMAGE_SIZE = (645, 1000)
 
 # LCD text area, in IMAGE coordinates.
 _LCD_RECT = QRect(205, 100, 240, 85)
@@ -76,7 +77,7 @@ class G13OverlayWidget(QWidget):
         self._hover: str | None = None
         self._pixmap: QPixmap | None = None
         self._scaled_pixmap: QPixmap | None = None
-        self.setFixedSize(464, 720)
+        self.setFixedSize(round(IMAGE_SIZE[0] * SCALE), round(IMAGE_SIZE[1] * SCALE))
         self.setMouseTracking(True)
 
     def set_labels(self, labels: dict[str, str], tooltips: dict[str, str], accent: QColor):
