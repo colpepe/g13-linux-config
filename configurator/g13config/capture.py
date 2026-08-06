@@ -1,5 +1,5 @@
 """Chord capture: press the real keys, get evdev codes."""
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import QPushButton
 
 from . import keycodes
@@ -43,12 +43,18 @@ class KeyCaptureField(QPushButton):
         if self._armed:
             self._disarm()
 
+    def event(self, e):
+        # Qt consumes Tab/Backtab for focus navigation inside QWidget::event(),
+        # so keyPressEvent is never reached for them. While armed, every key
+        # belongs to the capture, so handle KeyPress before focus sees it.
+        if self._armed and e.type() == QEvent.Type.KeyPress:
+            self.keyPressEvent(e)
+            return True
+        return super().event(e)
+
     def keyPressEvent(self, event):
         if not self._armed:
             return super().keyPressEvent(event)
-        if event.key() == Qt.Key_Escape:
-            self._disarm()
-            return
         code = keycodes.qt_native_to_evdev(event.nativeScanCode())
         if keycodes.is_modifier(code):
             if code not in self._held_mods:
@@ -68,7 +74,10 @@ class KeyCaptureField(QPushButton):
             self._render()
 
     def focusOutEvent(self, event):
-        if self._armed:
+        # Only a real focus change (clicking another widget, closing the
+        # dialog) should cancel; Tab no longer reaches focus handling while
+        # armed, so this can no longer fire mid-chord.
+        if self._armed and event.reason() != Qt.ActiveWindowFocusReason:
             self._disarm()
         super().focusOutEvent(event)
 
