@@ -16,6 +16,13 @@ def test_phys_map_thumb_and_stick():
     assert model.PHYS_TO_INDEX["STICK_DOWN"] == 39
 
 
+def test_phys_map_m_row():
+    assert model.PHYS_TO_INDEX["M1"] == 29
+    assert model.PHYS_TO_INDEX["M2"] == 30
+    assert model.PHYS_TO_INDEX["M3"] == 31
+    assert model.PHYS_TO_INDEX["MR"] == 32
+
+
 def test_index_to_phys_is_inverse():
     for name, idx in model.PHYS_TO_INDEX.items():
         assert model.INDEX_TO_PHYS[idx] == name
