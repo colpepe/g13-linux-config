@@ -34,6 +34,28 @@ A native Qt6 GUI application (`g13-config`), installed to `~/.local/bin/` by `./
 
 Requires: Python 3, `python3-pyside6` (Qt6), `python3-evdev`.
 
+#### Bindable keys
+
+All 22 `G` keys, the four **M1/M2/M3/MR** keys (the silkscreened row directly
+below the LCD), the two thumb buttons, and the stick click and four stick
+directions.
+
+The unlabeled row of four thin bars *above* the M keys switches the active
+profile. The driver handles those presses itself, so they cannot be bound.
+
+#### Capturing a binding
+
+Clicking a key opens the binding dialog already listening, so you can press
+your key or combo straight away — no need to click the capture field first.
+Every key captures literally, including **Tab** and **Escape**.
+
+Because Escape captures rather than closing the dialog, pressing it **twice**
+is the quick way out of a key you opened by mistake: the first press binds
+`Esc`, the second discards the dialog without saving.
+
+A key already holding a macro or mouse-pan binding opens on its own tab and
+does *not* start listening, so a stray keypress cannot overwrite it.
+
 ### Configuration
 
 Profile files and starter templates in `config/`. Each profile slot reads from `~/.config/g13/bindings-N.properties` (where N is 0–3) and shares a global macro pool in `macro-N.properties` files. Templates are `.properties` files in `~/.config/g13/templates/`. The driver's lenient parser preserves unknown keys and skips malformed lines; the configurator parses identically and surfaces warnings.
