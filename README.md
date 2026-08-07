@@ -19,6 +19,21 @@ Built and installed by `./install.sh`.
 
 A Python daemon (`monitor/g13_monitor.py`) that displays system stats (CPU, RAM, GPU utilization/temps, clock, active profile) on the G13's LCD. Runs as a systemd user service via `g13-monitor.service`.
 
+Five 26-character lines:
+
+```
+08/06/26  G13:0   19:24:40
+CPU                02% 45C
+RAM    18.6/60.4G  31% 36C
+GPU     5.1/12.0G  47% 52C
+   Profile: FUSION 360
+```
+
+The profile name on line 5 is read from the active slot's `name=` each tick, so
+renaming a profile in the configurator shows up without restarting the monitor.
+Names too long for the line are truncated; a profile with no name leaves the line
+blank.
+
 ### Configurator
 
 A native Qt6 GUI application (`g13-config`), installed to `~/.local/bin/` by `./install.sh`, for visually reprogramming the G13 without editing config files. Source code in `configurator/g13config/`.

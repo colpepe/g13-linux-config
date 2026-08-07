@@ -19,6 +19,9 @@ LCD_WIDTH = 26
 # C++ driver writes in G13::loadBindings).
 PROFILE_STATE_PATH = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "g13-profile")
 
+# Where the driver reads its profiles from; the name= line lives there.
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "g13")
+
 
 def get_active_profile():
     """Returns the active profile number as a string, or '?' if unavailable."""
@@ -28,6 +31,27 @@ def get_active_profile():
             return value if value else "?"
     except OSError:
         return "?"
+
+
+def get_active_profile_name():
+    """Name of the active profile, or None if it has none / can't be read.
+
+    The state file holds only the slot number, so the name comes from that
+    slot's bindings file. Re-read each tick rather than cached, so renaming
+    a profile in g13-config shows up without restarting the monitor.
+    """
+    number = get_active_profile()
+    if not number.isdigit():
+        return None
+    path = os.path.join(CONFIG_DIR, f"bindings-{number}.properties")
+    try:
+        with open(path) as f:
+            for line in f:
+                if line.startswith("name="):
+                    return line[len("name="):].strip() or None
+    except OSError:
+        return None
+    return None
 
 
 def format_bytes(size):
@@ -175,6 +199,20 @@ def format_header_line(width=LCD_WIDTH):
     return f"{date_str}{middle}{time_str}"
 
 
+def format_profile_line(name, width=LCD_WIDTH):
+    """"Profile: NAME" centered, or blank when the name is unknown.
+
+    A name too long for the line is truncated rather than wrapped: the
+    driver clips at the panel edge, and a half-drawn glyph reads worse
+    than a cut-off word.
+    """
+    if not name:
+        return ""
+    prefix = "Profile: "
+    text = prefix + name[:width - len(prefix)]
+    return f"{text:^{width}}"
+
+
 def format_stat_line(label, center_text, pct, temp, width=LCD_WIDTH):
     """Builds a strict-column stat line.
 
@@ -251,8 +289,8 @@ def main():
             # Line 4: GPU VRAM usage + busy% + temp
             line4 = format_stat_line("GPU", gpu_vram_text, gpu_busy, gpu_temp)
 
-            # Line 5: reserved for future use (left blank)
-            line5 = ""
+            # Line 5: active profile name, centered
+            line5 = format_profile_line(get_active_profile_name())
 
             # 3. Assemble message
             final_msg = f"{line1}\n{line2}\n{line3}\n{line4}\n{line5}"
