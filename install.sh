@@ -1,7 +1,24 @@
 #!/usr/bin/env bash
 # Installs the patched G13 driver, profiles, and LCD monitor for the current user.
+#
+# Existing profiles in ~/.config/g13 are never overwritten: reinstalling after a
+# driver or configurator change leaves your bindings alone. Pass --force-profiles
+# to replace them with the copies in config/ (this DISCARDS local edits).
 set -euo pipefail
 cd "$(dirname "$0")"
+
+FORCE_PROFILES=0
+for arg in "$@"; do
+    case "$arg" in
+        --force-profiles) FORCE_PROFILES=1 ;;
+        -h|--help)
+            sed -n '2,6p' "$0" | sed 's/^# \?//'
+            exit 0 ;;
+        *)
+            echo "unknown option: $arg (try --help)" >&2
+            exit 2 ;;
+    esac
+done
 
 BIN_DIR="$HOME/.local/bin"
 CFG_DIR="$HOME/.config/g13"
@@ -16,8 +33,21 @@ mkdir -p "$BIN_DIR" "$CFG_DIR" "$UNIT_DIR"
 install -m 755 "$DRIVER_SRC/Linux-G13-Driver" "$BIN_DIR/linux-g13-driver"
 install -m 755 monitor/g13_monitor.py "$BIN_DIR/g13_monitor.py"
 
-echo "--- Installing profiles (overwrites bindings-0..3 and macro-0..2) ---"
-install -m 644 config/*.properties "$CFG_DIR/"
+if [ "$FORCE_PROFILES" = 1 ]; then
+    echo "--- Installing profiles (--force-profiles: OVERWRITING bindings-0..3 and macro-0..2) ---"
+    install -m 644 config/*.properties "$CFG_DIR/"
+else
+    echo "--- Installing profiles (keeping any that already exist) ---"
+    for src in config/*.properties; do
+        dest="$CFG_DIR/$(basename "$src")"
+        if [ -e "$dest" ]; then
+            echo "  keeping $(basename "$dest")"
+        else
+            install -m 644 "$src" "$dest"
+            echo "  installed $(basename "$dest")"
+        fi
+    done
+fi
 
 echo "--- Installing systemd user units ---"
 sed 's|/usr/bin/linux-g13-driver|'"$BIN_DIR"'/linux-g13-driver|' \
