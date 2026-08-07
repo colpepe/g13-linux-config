@@ -65,6 +65,15 @@ class BindingEditorDialog(QDialog):
 
         self._load_current(current)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        # Arm here, not in __init__: grabKeyboard() has no effect on a widget
+        # that is not yet visible. Only when the dialog landed on the key radio
+        # -- arming over a macro or pan binding would let a stray keypress flip
+        # the selection to r_key and silently destroy the existing binding.
+        if self.r_key.isChecked() and not self.capture._armed:
+            self.capture._arm()
+
     def done(self, result):
         self.capture.disarm()
         self.pan_hold.disarm()
@@ -86,7 +95,8 @@ class BindingEditorDialog(QDialog):
             self.pan_hold.codes = list(b.hold or [])
             self.pan_hold._render()
         else:
-            self.r_none.setChecked(True)
+            # Unbound keys open ready to bind rather than parked on "Unbound".
+            self.r_key.setChecked(True)
 
     def _key_picked_from_list(self, index: int):
         code = self.key_list.itemData(index)

@@ -10,7 +10,8 @@ _ROWS = [
     ("Row 2: physical G8-G14", range(7, 14)),
     ("Row 3: physical G15-G19", range(14, 19)),
     ("Row 4: physical G20-G22", range(19, 22)),
-    ("Indices 22-32 (no physical key; preserved verbatim)", range(22, 33)),
+    ("Indices 22-28 (no physical key; preserved verbatim)", range(22, 29)),
+    ("M row: M1-M3, MR", range(29, 33)),
     ("Thumb: left, down, stick click", range(33, 36)),
     ("Stick directions: up, left, right, down", range(36, 40)),
 ]

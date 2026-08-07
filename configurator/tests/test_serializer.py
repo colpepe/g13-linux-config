@@ -16,8 +16,22 @@ def _profile() -> model.Profile:
     p.bindings[3] = model.MousePanBinding(dx=-5, dy=0)
     p.bindings[9] = model.MousePanBinding(dx=0, dy=5, hold=[272])
     p.bindings[25] = model.KeyBinding([30])
+    p.bindings[29] = model.KeyBinding([15])
     p.unknown_lines.append("future_key=whatever")
     return p
+
+
+def test_m_row_binding_round_trips():
+    text = serialize_profile(_profile())
+    assert "G29=p,k.15" in text
+    assert "# M row: M1-M3, MR" in text
+    reparsed = parse_profile(text, slot=1)
+    assert reparsed.bindings[29] == model.KeyBinding([15])
+
+
+def test_indices_22_to_28_still_preserved():
+    text = serialize_profile(_profile())
+    assert "G25=p,k.30" in text
 
 
 def test_serialize_emits_driver_syntax():

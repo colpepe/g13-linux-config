@@ -44,6 +44,16 @@ def _build_key_rects() -> dict[str, QRect]:
     for name, x in row4.items():
         rects[name] = QRect(x, row4_y, row4_w, row4_h)
 
+    # The silkscreened M1/M2/M3/MR row between the LCD and the keypad.
+    # The printed bars are only ~22px tall; the hit-rect is taller so the
+    # target is clickable and the label chip stays readable.
+    # x values are per-key, not a fixed pitch: the bars sit on a curve, so the
+    # gaps between them widen toward the middle (measured centers 189/272/361/444).
+    m_y, m_w, m_h = 250, 74, 30
+    m_row = {"M1": 152, "M2": 235, "M3": 324, "MR": 407}
+    for name, x in m_row.items():
+        rects[name] = QRect(x, m_y, m_w, m_h)
+
     rects["THUMB_LEFT"] = QRect(464, 590, 40, 70)
     rects["THUMB_DOWN"] = QRect(513, 668, 48, 60)
     rects["STICK_CLICK"] = QRect(546, 606, 44, 34)

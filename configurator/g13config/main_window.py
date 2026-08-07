@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QSizePolicy,
-    QTabBar,
     QToolBar,
     QVBoxLayout,
     QWidget,
@@ -20,6 +19,7 @@ from .overlay import G13OverlayWidget
 from .parser import parse_profile
 from .serializer import serialize_profile
 from .store import ConfigStore
+from .tabbar import RenamableTabBar
 
 SLOTS = range(4)
 
@@ -59,10 +59,11 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.act_revert)
         self.toolbar.addAction(self.act_apply)
 
-        self.tabs = QTabBar()
+        self.tabs = RenamableTabBar()
         for p in self.profiles:
             self.tabs.addTab(p.name or f"Slot {p.slot + 1}")
         self.tabs.currentChanged.connect(self._on_tab_changed)
+        self.tabs.tabRenamed.connect(self._on_tab_renamed)
 
         central = QWidget()
         column = QVBoxLayout(central)
@@ -139,6 +140,13 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index: int):
         self.current_slot = index
+        self.refresh_ui()
+
+    def _on_tab_renamed(self, index: int, text: str):
+        # refresh_ui re-derives the tab label from the profile name, so an
+        # empty rename falls back to "Slot N" rather than an unlabelled tab.
+        self.profiles[index].name = text
+        self.mark_dirty()
         self.refresh_ui()
 
     def _refresh_tab_chips(self):

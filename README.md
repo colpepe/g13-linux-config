@@ -27,12 +27,34 @@ A native Qt6 GUI application (`g13-config`), installed to `~/.local/bin/` by `./
 - **Profile editor:** Modify key bindings for all four profiles via a clickable device overlay showing the physical G13 layout
 - **Binding types:** simple keys, modifier combos (Ctrl+Shift+T), macros, and mouse pan directions
 - **Macro editor:** Record and edit key sequences with timing, global macro pool (200 slots shared across profiles)
-- **Profile settings:** name, LCD color chip, stick mode (mouse or keys), speed, and orbit hold-chord
+- **Profile settings:** name, LCD color chip, stick mode (mouse or keys), speed, and orbit hold-chord. Double-click a profile tab to rename it in place (Enter commits, Escape reverts); clearing the name falls back to `Slot N`
 - **Apply/Revert:** Changes accumulate in memory; Apply writes atomically to `~/.config/g13/bindings-N.properties` and `macro-N.properties` for driver live-reload; Revert discards unsaved edits
 - **Templates:** Save profiles as templates, create new profiles from templates (`~/.config/g13/templates/`). Starter templates ship with the repo: blank, wasd-gaming, fusion-360
 - **External change detection:** File watcher alerts if config files change on disk, preventing silent clobbers
 
 Requires: Python 3, `python3-pyside6` (Qt6), `python3-evdev`.
+
+#### Bindable keys
+
+All 22 `G` keys, the four **M1/M2/M3/MR** keys (the silkscreened row directly
+below the LCD), the two thumb buttons, and the stick click and four stick
+directions.
+
+The unlabeled row of four thin bars *above* the M keys switches the active
+profile. The driver handles those presses itself, so they cannot be bound.
+
+#### Capturing a binding
+
+Clicking a key opens the binding dialog already listening, so you can press
+your key or combo straight away — no need to click the capture field first.
+Every key captures literally, including **Tab** and **Escape**.
+
+Because Escape captures rather than closing the dialog, pressing it **twice**
+is the quick way out of a key you opened by mistake: the first press binds
+`Esc`, the second discards the dialog without saving.
+
+A key already holding a macro or mouse-pan binding opens on its own tab and
+does *not* start listening, so a stray keypress cannot overwrite it.
 
 ### Configuration
 

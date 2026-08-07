@@ -45,8 +45,12 @@ class Profile:
 
 
 # Physical layout <-> 0-based property index (G1..G22 -> G0..G21 etc.)
+# M1/M2/M3/MR are the silkscreened bottom row between the LCD and the keypad.
+# The unlabeled top row (indices 25-28) switches profiles in the driver and is
+# deliberately not mapped here.
 PHYS_TO_INDEX: dict[str, int] = {f"G{n}": n - 1 for n in range(1, 23)}
 PHYS_TO_INDEX.update({
+    "M1": 29, "M2": 30, "M3": 31, "MR": 32,
     "THUMB_LEFT": 33, "THUMB_DOWN": 34, "STICK_CLICK": 35,
     "STICK_UP": 36, "STICK_LEFT": 37, "STICK_RIGHT": 38, "STICK_DOWN": 39,
 })
