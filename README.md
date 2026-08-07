@@ -27,7 +27,7 @@ A native Qt6 GUI application (`g13-config`), installed to `~/.local/bin/` by `./
 - **Profile editor:** Modify key bindings for all four profiles via a clickable device overlay showing the physical G13 layout
 - **Binding types:** simple keys, modifier combos (Ctrl+Shift+T), macros, and mouse pan directions
 - **Macro editor:** Record and edit key sequences with timing, global macro pool (200 slots shared across profiles)
-- **Profile settings:** name, LCD color chip, stick mode (mouse or keys), speed, and orbit hold-chord
+- **Profile settings:** name, LCD color chip, stick mode (mouse or keys), speed, and orbit hold-chord. Double-click a profile tab to rename it in place (Enter commits, Escape reverts); clearing the name falls back to `Slot N`
 - **Apply/Revert:** Changes accumulate in memory; Apply writes atomically to `~/.config/g13/bindings-N.properties` and `macro-N.properties` for driver live-reload; Revert discards unsaved edits
 - **Templates:** Save profiles as templates, create new profiles from templates (`~/.config/g13/templates/`). Starter templates ship with the repo: blank, wasd-gaming, fusion-360
 - **External change detection:** File watcher alerts if config files change on disk, preventing silent clobbers
