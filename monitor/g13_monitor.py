@@ -24,7 +24,11 @@ CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "g13")
 
 
 def get_active_profile():
-    """Returns the active profile number as a string, or '?' if unavailable."""
+    """Active profile as the driver reports it: 1-based, or '?' if unavailable.
+
+    G13::loadBindings writes (bindings + 1), so this is the number shown on
+    the physical keys, NOT the 0-based slot used in bindings-N.properties.
+    """
     try:
         with open(PROFILE_STATE_PATH) as f:
             value = f.read().strip()
@@ -36,14 +40,18 @@ def get_active_profile():
 def get_active_profile_name():
     """Name of the active profile, or None if it has none / can't be read.
 
-    The state file holds only the slot number, so the name comes from that
-    slot's bindings file. Re-read each tick rather than cached, so renaming
-    a profile in g13-config shows up without restarting the monitor.
+    The state file holds a 1-based profile number but bindings files are
+    named by 0-based slot, so the number is decremented before lookup.
+    Re-read each tick rather than cached, so renaming a profile in
+    g13-config shows up without restarting the monitor.
     """
     number = get_active_profile()
     if not number.isdigit():
         return None
-    path = os.path.join(CONFIG_DIR, f"bindings-{number}.properties")
+    slot = int(number) - 1
+    if slot < 0:
+        return None
+    path = os.path.join(CONFIG_DIR, f"bindings-{slot}.properties")
     try:
         with open(path) as f:
             for line in f:
